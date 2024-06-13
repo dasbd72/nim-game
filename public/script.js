@@ -86,6 +86,14 @@ class NimGame {
 
   // endTurn ends the current turn
   endTurn() {
+    let chosen_count = 0;
+    for (let pile of this.piles) {
+      chosen_count += pile.getChosenCount();
+    }
+    if (chosen_count === 0) {
+      console.error("No stones are chosen");
+      return;
+    }
     for (let pile of this.piles) {
       pile.endTurn();
     }
