@@ -5,31 +5,70 @@ class Root {
   // constructor initializes the game
   constructor() {
     this.game = null;
-    this.btn_start_game = document.getElementById("btn-start-game");
-    if (!this.btn_start_game) {
-      console.error("btn-start-game not found");
+    this.title_container = null;
+    this.input_container = null;
+    this.status_container = null;
+    this.element = document.getElementById("root");
+    if (!this.element) {
+      console.error("root not found");
       return;
     }
-    this.btn_start_game.addEventListener("click", () =>
-      this.onClickStartGame()
-    );
-
-    this.btn_end_turn = document.getElementById("btn-end-turn");
-    if (!this.btn_end_turn) {
-      console.error("btn-end-turn not found");
-      return;
-    }
-    this.btn_end_turn.addEventListener("click", () => this.onClickEndTurn());
+    this.initialize();
   }
 
-  // onClickStartGame is called when the start game button is clicked
-  onClickStartGame() {
+  // initialize initializes the game
+  initialize() {
+    this.element.innerHTML = "";
+
+    // Create title
+    let title = document.createElement("h1");
+    title.innerHTML = "Nim Game";
+    let title_container = document.createElement("div");
+    title_container.id = "title-container";
+    this.element.appendChild(title_container);
+    title_container.appendChild(title);
+    this.element.appendChild(title_container);
+    this.title_container = title_container;
+
+    // Create input container
+    let btn_start_game = document.createElement("button");
+    btn_start_game.innerHTML = "Start Game";
+    btn_start_game.addEventListener("click", () => this.#onClickStartGame());
+    let btn_end_turn = document.createElement("button");
+    btn_end_turn.innerHTML = "End Turn";
+    btn_end_turn.addEventListener("click", () => this.#onClickEndTurn());
+    let input_container = document.createElement("div");
+    input_container.id = "input-container";
+    input_container.appendChild(btn_start_game);
+    input_container.appendChild(document.createTextNode("\u00A0")); // &nbsp;
+    input_container.appendChild(btn_end_turn);
+    this.element.appendChild(input_container);
+    this.input_container = input_container;
+
+    // Create status container
+    let status_container = document.createElement("div");
+    status_container.id = "status-container";
+    this.element.appendChild(status_container);
+    this.status_container = status_container;
+
+    // Create game container
+    if (this.game !== null) {
+      delete this.game;
+    }
+    this.game = new NimGame([3, 4, 5], (status) => {
+      return this.#updateStatus(status);
+    });
+    this.element.appendChild(this.game.element);
+  }
+
+  // #onClickStartGame is called when the start game button is clicked
+  #onClickStartGame() {
     console.log("Starting game");
-    this.game = new NimGame([3, 4, 5]);
+    this.initialize();
   }
 
-  // onClickEndTurn is called when the end turn button is clicked
-  onClickEndTurn() {
+  // #onClickEndTurn is called when the end turn button is clicked
+  #onClickEndTurn() {
     console.log("Ending turn");
     if (this.game === null) {
       console.error("Game is not started");
@@ -37,35 +76,42 @@ class Root {
     }
     this.game.endTurn();
   }
+
+  // #updateStatus updates the status container
+  #updateStatus(status) {
+    if (!this.status_container) {
+      console.error("status-container not found");
+      return false;
+    }
+    this.status_container.innerHTML = status;
+    return true;
+  }
 }
 
 // NimGame represents the Nim game
 class NimGame {
   // constructor initializes the game with the number of piles and stones specified
-  constructor(n_stones_lst) {
+  constructor(n_stones_lst, updateStatus) {
     this.n_stones_lst = n_stones_lst;
-    this.game_container = document.getElementById("game-container");
-    if (!this.game_container) {
+    this.element = document.createElement("div");
+    this.element.id = "game-container";
+    if (!this.element) {
       console.error("game-container not found");
       return;
     }
-    this.game_container.innerHTML = "";
+    this.element.innerHTML = "";
     this.piles = [];
     for (let i = 0; i < n_stones_lst.length; i++) {
       let pile = new Pile(`pile-${i}`, n_stones_lst[i], () => {
         return this.#checkClickedStone(i);
       });
       this.piles.push(pile);
-      this.game_container.appendChild(pile.element);
+      this.element.appendChild(pile.element);
     }
 
-    this.status_container = document.getElementById("status-container");
-    if (!this.status_container) {
-      console.error("status-container not found");
-      return;
-    }
+    this.updateStatus = updateStatus;
     this.player_turn = 0;
-    this.status_container.innerHTML = `Player Turn: ${this.player_turn}`;
+    this.updateStatus(`Player Turn: ${this.player_turn}`);
   }
 
   // #checkClickedStone checks if a stone in a pile can be clicked
@@ -105,10 +151,10 @@ class NimGame {
     this.player_turn = (this.player_turn + 1) % 2;
     if (active_count === 0) {
       console.log("Player", this.player_turn, "wins");
-      this.status_container.innerHTML = `Player ${this.player_turn} wins`;
+      this.updateStatus(`Player ${this.player_turn} wins`);
       return;
     }
-    this.status_container.innerHTML = `Player Turn: ${this.player_turn}`;
+    this.updateStatus(`Player Turn: ${this.player_turn}`);
   }
 }
 
