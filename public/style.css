@@ -15,7 +15,6 @@ body,
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  margin-top: 20px;
 }
 
 .input-container {
@@ -64,6 +63,20 @@ body,
   flex-wrap: wrap;
   justify-content: center;
   margin-top: 20px;
+}
+
+.pile-inner {
+  width: fit-content;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  padding: 10px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.17);
+  border-radius: 15px;
+}
+
+.pile-inner:hover {
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
 }
 
 .stone {

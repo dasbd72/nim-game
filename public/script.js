@@ -324,14 +324,14 @@ class Pile {
   // chooseStone: the function to choose a stone
   constructor(id, n_stones, chooseStone) {
     console.log("Creating pile", id, "with", n_stones, "stones");
-    this.element = this.#createElement(id);
+    [this.element, this.innerElement] = this.#createElement(id);
     this.stones = [];
     for (let i = 0; i < n_stones; i++) {
       let stone = new Stone(`${id}-stone-${i}`, () => {
         return chooseStone(i);
       });
       this.stones.push(stone);
-      this.element.appendChild(stone.element);
+      this.innerElement.appendChild(stone.element);
     }
   }
 
@@ -342,7 +342,10 @@ class Pile {
     let element = document.createElement("div");
     element.classList.add("pile");
     element.id = id;
-    return element;
+    let innerElement = document.createElement("div");
+    innerElement.classList.add("pile-inner");
+    element.appendChild(innerElement);
+    return [element, innerElement];
   };
 
   // getChosenCount returns the number of is_chosen stones
