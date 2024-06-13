@@ -17,14 +17,14 @@ class Root {
   }
 
   // initialize initializes the game
-  initialize() {
+  initialize = () => {
     this.element.innerHTML = "";
 
     // Create title
     let title = document.createElement("h1");
     title.innerHTML = "Nim Game";
     let title_container = document.createElement("div");
-    title_container.id = "title-container";
+    title_container.classList.add("title-container");
     this.element.appendChild(title_container);
     title_container.appendChild(title);
     this.element.appendChild(title_container);
@@ -38,7 +38,7 @@ class Root {
     btn_end_turn.innerHTML = "End Turn";
     btn_end_turn.addEventListener("click", () => this.#onClickEndTurn());
     let input_container = document.createElement("div");
-    input_container.id = "input-container";
+    input_container.classList.add("input-container");
     input_container.appendChild(btn_start_game);
     input_container.appendChild(document.createTextNode("\u00A0")); // &nbsp;
     input_container.appendChild(btn_end_turn);
@@ -47,7 +47,7 @@ class Root {
 
     // Create status container
     let status_container = document.createElement("div");
-    status_container.id = "status-container";
+    status_container.classList.add("status-container");
     this.element.appendChild(status_container);
     this.status_container = status_container;
 
@@ -55,55 +55,54 @@ class Root {
     if (this.game !== null) {
       delete this.game;
     }
-    this.game = new NimGame([3, 4, 5], (status) => {
+    this.game = new NimGame(`game-container`, [3, 4, 5], (status) => {
       return this.#updateStatus(status);
     });
     this.element.appendChild(this.game.element);
-  }
+  };
 
   // #onClickStartGame is called when the start game button is clicked
-  #onClickStartGame() {
+  #onClickStartGame = () => {
     console.log("Starting game");
     this.initialize();
-  }
+  };
 
   // #onClickEndTurn is called when the end turn button is clicked
-  #onClickEndTurn() {
+  #onClickEndTurn = () => {
     console.log("Ending turn");
     if (this.game === null) {
       console.error("Game is not started");
       return;
     }
     this.game.endTurn();
-  }
+  };
 
   // #updateStatus updates the status container
-  #updateStatus(status) {
+  //
+  // status: the status to update
+  #updateStatus = (status) => {
     if (!this.status_container) {
       console.error("status-container not found");
       return false;
     }
     this.status_container.innerHTML = status;
     return true;
-  }
+  };
 }
 
 // NimGame represents the Nim game
 class NimGame {
   // constructor initializes the game with the number of piles and stones specified
-  constructor(n_stones_lst, updateStatus) {
+  //
+  // n_stones_lst: the list of number of stones in each pile
+  // updateStatus: the function to update the status
+  constructor(id, n_stones_lst, updateStatus) {
     this.n_stones_lst = n_stones_lst;
-    this.element = document.createElement("div");
-    this.element.id = "game-container";
-    if (!this.element) {
-      console.error("game-container not found");
-      return;
-    }
-    this.element.innerHTML = "";
+    this.element = this.#createElement(id);
     this.piles = [];
     for (let i = 0; i < n_stones_lst.length; i++) {
-      let pile = new Pile(`pile-${i}`, n_stones_lst[i], () => {
-        return this.#checkClickedStone(i);
+      let pile = new Pile(`pile-${i}`, n_stones_lst[i], (stone_idx) => {
+        return this.#chooseStone(i, stone_idx);
       });
       this.piles.push(pile);
       this.element.appendChild(pile.element);
@@ -114,10 +113,21 @@ class NimGame {
     this.updateStatus(`Player Turn: ${this.player_turn}`);
   }
 
-  // #checkClickedStone checks if a stone in a pile can be clicked
+  // #createElement creates the game container
+  //
+  // id: the id of the game container
+  #createElement = (id) => {
+    let element = document.createElement("div");
+    element.id = id;
+    element.classList.add("game-container");
+    return element;
+  };
+
+  // #chooseStone chooses a stone in the pile
   //
   // pile_idx: the index of the pile
-  #checkClickedStone(pile_idx) {
+  // stone_idx: the index of the stone
+  #chooseStone = (pile_idx, stone_idx) => {
     for (let i = 0; i < this.piles.length; i++) {
       if (i === pile_idx) {
         continue;
@@ -127,11 +137,11 @@ class NimGame {
         return false;
       }
     }
-    return true;
-  }
+    this.piles[pile_idx].choose(stone_idx);
+  };
 
   // endTurn ends the current turn
-  endTurn() {
+  endTurn = () => {
     let chosen_count = 0;
     for (let pile of this.piles) {
       chosen_count += pile.getChosenCount();
@@ -155,7 +165,7 @@ class NimGame {
       return;
     }
     this.updateStatus(`Player Turn: ${this.player_turn}`);
-  }
+  };
 }
 
 // Pile represents a pile of stones
@@ -164,14 +174,14 @@ class Pile {
   //
   // id: the id of the pile
   // n_stones: the number of stones in the pile
-  // checkClickedStone: a function that checks if a stone can be clicked
-  constructor(id, n_stones, checkClickedStone) {
+  // chooseStone: the function to choose a stone
+  constructor(id, n_stones, chooseStone) {
     console.log("Creating pile", id, "with", n_stones, "stones");
     this.element = this.#createElement(id);
     this.stones = [];
     for (let i = 0; i < n_stones; i++) {
       let stone = new Stone(`${id}-stone-${i}`, () => {
-        return checkClickedStone();
+        return chooseStone(i);
       });
       this.stones.push(stone);
       this.element.appendChild(stone.element);
@@ -179,6 +189,8 @@ class Pile {
   }
 
   // #createElement creates a pile with the specified id
+  //
+  // id: the id of the pile
   #createElement = (id) => {
     let element = document.createElement("div");
     element.classList.add("pile");
@@ -187,7 +199,7 @@ class Pile {
   };
 
   // getChosenCount returns the number of is_chosen stones
-  getChosenCount() {
+  getChosenCount = () => {
     let count = 0;
     for (let stone of this.stones) {
       if (stone.is_active && stone.is_chosen) {
@@ -195,10 +207,10 @@ class Pile {
       }
     }
     return count;
-  }
+  };
 
   // getActiveCount returns the number of is_active stones
-  getActiveCount() {
+  getActiveCount = () => {
     let count = 0;
     for (let stone of this.stones) {
       if (stone.is_active) {
@@ -206,14 +218,21 @@ class Pile {
       }
     }
     return count;
-  }
+  };
+
+  // choose chooses a stone in the pile
+  //
+  // stone_idx: the index of the stone
+  choose = (stone_idx) => {
+    this.stones[stone_idx].choose();
+  };
 
   // endTurn ends the current turn
-  endTurn() {
+  endTurn = () => {
     for (let stone of this.stones) {
       stone.endTurn();
     }
-  }
+  };
 }
 
 // Stone represents a stone
@@ -221,45 +240,56 @@ class Stone {
   // constructor initializes the stone
   //
   // id: the id of the stone
-  // checkClickedStone: a function that checks if a stone can be clicked
-  constructor(id, checkClickedStone) {
+  // chooseStone: the function to choose the stone
+  constructor(id, chooseStone) {
     console.log("Creating stone", id);
-    this.element = this.#createElement(id, checkClickedStone);
+    this.element = this.#createElement(id, chooseStone);
     this.is_active = true;
     this.is_chosen = false;
   }
 
   // #createElement creates a stone with the specified id
-  #createElement = (id, checkClickedStone) => {
+  //
+  // id: the id of the stone
+  // chooseStone: the function to choose the stone
+  #createElement = (id, chooseStone) => {
     let element = document.createElement("div");
     element = document.createElement("div");
     element.classList.add("stone");
     element.classList.add("stone-enabled");
     element.id = id;
-    element.addEventListener("click", () => this.#onClick(checkClickedStone));
+    element.addEventListener("click", () => this.#onClick(chooseStone));
     return element;
   };
 
   // #onClick is called when the stone is clicked
-  #onClick(checkClickedStone) {
+  //
+  // chooseStone: the function to choose the stone
+  #onClick = (chooseStone) => {
     if (!this.is_active) {
+      console.error("Stone is not active");
       return;
     }
-    if (!checkClickedStone()) {
+    chooseStone();
+  };
+
+  // choose chooses the stone
+  choose = () => {
+    if (!this.is_active) {
+      console.error("Stone is not active");
       return;
     }
-    console.log("Clicked stone", this.element.id);
     this.is_chosen = !this.is_chosen;
     this.element.classList.toggle("stone-enabled");
     this.element.classList.toggle("stone-disabled");
-  }
+  };
 
   // endTurn ends the current turn
-  endTurn() {
+  endTurn = () => {
     if (this.is_chosen) {
       this.is_active = false;
     }
-  }
+  };
 }
 
 // Call main when the window is loaded

@@ -11,28 +11,28 @@ body,
   height: 100%;
 }
 
-#title-container {
+.title-container {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
   margin-top: 20px;
 }
 
-#input-container {
+.input-container {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
   margin-top: 20px;
 }
 
-#status-container {
+.status-container {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
   margin-top: 20px;
 }
 
-#game-container {
+.game-container {
   width: 100%;
   display: flex;
   flex-wrap: wrap;
