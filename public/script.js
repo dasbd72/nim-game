@@ -37,22 +37,17 @@ addPile = (game_container, pile_id, n_stones) => {
 };
 
 // initialize initializes the game with the number of piles and stones specified
-initialize = (n_piles, n_stones) => {
-  console.log(
-    "Initializing game with",
-    n_piles,
-    "piles and",
-    n_stones,
-    "stones"
-  );
+initialize = (n_stones_lst) => {
+  console.log("Initializing game");
   game_container = document.getElementById("game-container");
   if (!game_container) {
     console.error("game-container not found");
     return;
   }
   game_container.innerHTML = "";
-  for (let i = 0; i < n_piles; i++) {
-    addPile(game_container, `pile-${i}`, n_stones);
+
+  for (let i = 0; i < n_stones_lst.length; i++) {
+    addPile(game_container, `pile-${i}`, n_stones_lst[i]);
   }
 };
 
@@ -60,18 +55,8 @@ initialize = (n_piles, n_stones) => {
 // It initializes the game with the number of piles and stones specified by the user
 onClickStartGame = () => {
   console.log("Starting game");
-  n_piles = document.getElementById("input-num-piles").value;
-  if (!n_piles || n_piles < 1) {
-    alert("Number of piles must be greater than 0");
-    return;
-  }
-  n_stones = document.getElementById("input-num-stones").value;
-  if (!n_stones || n_stones < 1) {
-    alert("Number of stones must be greater than 0");
-    return;
-  }
-
-  initialize(n_piles, n_stones);
+  n_stones_lst = [3, 4, 5];
+  initialize(n_stones_lst);
 };
 
 // setup initializes window elements
