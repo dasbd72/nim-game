@@ -13,12 +13,6 @@ class Root {
       console.error("root not found");
       return;
     }
-    this.initialize();
-  }
-
-  // initialize initializes the game
-  initialize = () => {
-    this.element.innerHTML = "";
 
     // Create title
     let title = document.createElement("h1");
@@ -51,10 +45,19 @@ class Root {
     this.element.appendChild(status_container);
     this.status_container = status_container;
 
-    // Create game container
+    // Initialize game
+    this.initializeGame();
+  }
+
+  // initializeGame initializes the game
+  initializeGame = () => {
+    console.log("Initializing game");
+    // Remove game container
     if (this.game !== null) {
+      this.element.removeChild(this.game.element);
       delete this.game;
     }
+    // Create game container
     this.game = new NimGame(`game-container`, [3, 4, 5], (status) => {
       return this.#updateStatus(status);
     });
@@ -63,8 +66,7 @@ class Root {
 
   // #onClickStartGame is called when the start game button is clicked
   #onClickStartGame = () => {
-    console.log("Starting game");
-    this.initialize();
+    this.initializeGame();
   };
 
   // #onClickEndTurn is called when the end turn button is clicked
