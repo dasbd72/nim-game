@@ -27,13 +27,20 @@ class Root {
     // Create input container
     let btn_start_game = document.createElement("button");
     btn_start_game.innerHTML = "Start Game";
-    btn_start_game.addEventListener("click", () => this.#onClickStartGame());
+    btn_start_game.addEventListener("click", () => this.#onClickStartGame(0));
+    let btn_start_game_ai = document.createElement("button");
+    btn_start_game_ai.innerHTML = "Start Game AI";
+    btn_start_game_ai.addEventListener("click", () =>
+      this.#onClickStartGame(1)
+    );
     let btn_end_turn = document.createElement("button");
     btn_end_turn.innerHTML = "End Turn";
     btn_end_turn.addEventListener("click", () => this.#onClickEndTurn());
     let input_container = document.createElement("div");
     input_container.classList.add("input-container");
     input_container.appendChild(btn_start_game);
+    input_container.appendChild(document.createTextNode("\u00A0")); // &nbsp;
+    input_container.appendChild(btn_start_game_ai);
     input_container.appendChild(document.createTextNode("\u00A0")); // &nbsp;
     input_container.appendChild(btn_end_turn);
     this.element.appendChild(input_container);
@@ -46,11 +53,17 @@ class Root {
     this.status_container = status_container;
 
     // Initialize game
-    this.initializeGame();
+    let mode = localStorage.getItem("nim_game_mode");
+    if (mode === null) {
+      mode = 0;
+    }
+    this.initializeGame(mode);
   }
 
   // initializeGame initializes the game
-  initializeGame = () => {
+  //
+  // mode: the mode of the game. 0 for 2 players, 1 for player versus AI
+  initializeGame = (mode) => {
     console.log("Initializing game");
     // Remove game container
     if (this.game !== null) {
@@ -58,15 +71,16 @@ class Root {
       delete this.game;
     }
     // Create game container
-    this.game = new NimGame(`game-container`, [3, 4, 5], (status) => {
+    this.game = new NimGame(`game-container`, mode, [3, 4, 5], (status) => {
       return this.#updateStatus(status);
     });
     this.element.appendChild(this.game.element);
   };
 
   // #onClickStartGame is called when the start game button is clicked
-  #onClickStartGame = () => {
-    this.initializeGame();
+  #onClickStartGame = (mode) => {
+    localStorage.setItem("nim_game_mode", mode);
+    this.initializeGame(mode);
   };
 
   // #onClickEndTurn is called when the end turn button is clicked
@@ -98,7 +112,8 @@ class NimGame {
   //
   // n_stones_lst: the list of number of stones in each pile
   // updateStatus: the function to update the status
-  constructor(id, n_stones_lst, updateStatus) {
+  constructor(id, mode, n_stones_lst, updateStatus) {
+    this.mode = mode;
     this.n_stones_lst = n_stones_lst;
     this.element = this.#createElement(id);
     this.piles = [];
@@ -112,7 +127,12 @@ class NimGame {
 
     this.updateStatus = updateStatus;
     this.player_turn = 0;
-    this.updateStatus(`Player Turn: ${this.player_turn}`);
+    if (this.mode === 0) {
+      this.player_name_lst = ["Player 1", "Player 2"];
+    } else {
+      this.player_name_lst = ["Player", "Computer"];
+    }
+    this.updateStatus(`Player Turn: ${this.player_name_lst[this.player_turn]}`);
   }
 
   // #createElement creates the game container
@@ -130,6 +150,11 @@ class NimGame {
   // pile_idx: the index of the pile
   // stone_idx: the index of the stone
   #chooseStone = (pile_idx, stone_idx) => {
+    if (this.mode === 1 && this.player_turn === 1) {
+      console.error("Computer is playing");
+      return false;
+    }
+
     for (let i = 0; i < this.piles.length; i++) {
       if (i === pile_idx) {
         continue;
@@ -140,6 +165,122 @@ class NimGame {
       }
     }
     this.piles[pile_idx].choose(stone_idx);
+  };
+
+  // #computerTurn is called when it is the computer's turn
+  #computerTurn = () => {
+    // Get active count list of each pile
+    let active_count_lst = [];
+    let active_count = 0;
+    for (let pile of this.piles) {
+      let count = pile.getActiveCount();
+      active_count_lst.push(count);
+      active_count += count;
+    }
+    if (active_count === 0) {
+      console.error("computer: No active stones");
+      return;
+    }
+
+    // Get optimal move, otherwise get random move
+    let [choose_pile_idx, choose_stones_cnt] =
+      this.#getOptimalMove(active_count_lst);
+    if (choose_pile_idx === -1 || choose_stones_cnt === 0) {
+      [choose_pile_idx, choose_stones_cnt] =
+        this.#getRandomMove(active_count_lst);
+    } else {
+      console.log("computer: optimal move");
+    }
+
+    // Perform move
+    console.log(
+      "computer: choose",
+      choose_stones_cnt,
+      "stones from pile",
+      choose_pile_idx
+    );
+    for (let i = 0; choose_stones_cnt > 0; i++) {
+      if (this.piles[choose_pile_idx].stones[i].is_active) {
+        this.piles[choose_pile_idx].stones[i].choose();
+        choose_stones_cnt -= 1;
+      }
+    }
+
+    // End turn
+    this.endTurn();
+  };
+
+  // #getOptimalMove returns the optimal move given the active count list
+  //
+  // active_count_lst: the list of active counts for each pile
+  #getOptimalMove = (active_count_lst) => {
+    // try to leave odd number of piles with 1 stone
+    let active_eq_1_lst = []; // list of piles with 1 stone
+    let active_gt_1_lst = []; // list of piles with more than 1 stone
+    for (let i = 0; i < active_count_lst.length; i++) {
+      if (active_count_lst[i] === 1) {
+        active_eq_1_lst.push(i);
+      }
+      if (active_count_lst[i] > 1) {
+        active_gt_1_lst.push(i);
+      }
+    }
+    if (active_gt_1_lst.length == 1 && active_eq_1_lst.length % 2 === 0) {
+      return [active_gt_1_lst[0], active_count_lst[active_gt_1_lst[0]] - 1];
+    }
+    if (active_gt_1_lst.length == 1 && active_eq_1_lst.length % 2 === 1) {
+      return [active_gt_1_lst[0], active_count_lst[active_gt_1_lst[0]]];
+    }
+    if (active_gt_1_lst.length == 0 && active_eq_1_lst.length % 2 === 0) {
+      return [active_eq_1_lst[0], 1];
+    }
+    if (active_gt_1_lst.length == 0 && active_eq_1_lst.length % 2 === 1) {
+      // losing position
+      return [-1, 0];
+    }
+
+    // get nim sum
+    let nim_sum = 0;
+    for (let count of active_count_lst) {
+      nim_sum ^= count;
+    }
+    console.log("nim_sum", nim_sum);
+
+    for (let i = 0; i < active_count_lst.length; i++) {
+      if (active_count_lst[i] === 0) {
+        continue;
+      }
+      for (let j = 1; j <= active_count_lst[i]; j++) {
+        let new_nim_sum =
+          nim_sum ^ active_count_lst[i] ^ (active_count_lst[i] - j);
+        if (new_nim_sum === 0) {
+          return [i, j];
+        }
+      }
+    }
+    return [-1, 0];
+  };
+
+  // #getRandomMove returns a random move given the active count list
+  //
+  // active_count_lst: the list of active counts for each pile
+  #getRandomMove = (active_count_lst) => {
+    let valid_piles = [];
+    for (let i = 0; i < active_count_lst.length; i++) {
+      if (active_count_lst[i] > 0) {
+        valid_piles.push(i);
+      }
+    }
+
+    if (valid_piles.length === 0) {
+      return [-1, 0];
+    }
+
+    let choose_pile_idx =
+      valid_piles[Math.floor(Math.random() * valid_piles.length)];
+    let choose_stones_cnt =
+      Math.floor(Math.random() * active_count_lst[choose_pile_idx]) + 1;
+    return [choose_pile_idx, choose_stones_cnt];
   };
 
   // endTurn ends the current turn
@@ -162,11 +303,15 @@ class NimGame {
     }
     this.player_turn = (this.player_turn + 1) % 2;
     if (active_count === 0) {
-      console.log("Player", this.player_turn, "wins");
-      this.updateStatus(`Player ${this.player_turn} wins`);
+      console.log(this.player_name_lst[this.player_turn], "wins");
+      this.updateStatus(`${this.player_name_lst[this.player_turn]} wins`);
       return;
     }
-    this.updateStatus(`Player Turn: ${this.player_turn}`);
+    this.updateStatus(`Player Turn: ${this.player_name_lst[this.player_turn]}`);
+
+    if (this.mode === 1 && this.player_turn === 1) {
+      this.#computerTurn();
+    }
   };
 }
 
