@@ -59,7 +59,13 @@ class NimGame {
       this.game_container.appendChild(pile.element);
     }
 
+    this.status_container = document.getElementById("status-container");
+    if (!this.status_container) {
+      console.error("status-container not found");
+      return;
+    }
     this.player_turn = 0;
+    this.status_container.innerHTML = `Player Turn: ${this.player_turn}`;
   }
 
   // #checkClickedStone checks if a stone in a pile can be clicked
@@ -84,6 +90,7 @@ class NimGame {
       pile.endTurn();
     }
     this.player_turn = (this.player_turn + 1) % 2;
+    this.status_container.innerHTML = `Player Turn: ${this.player_turn}`;
   }
 }
 
