@@ -97,7 +97,17 @@ class NimGame {
     for (let pile of this.piles) {
       pile.endTurn();
     }
+
+    let active_count = 0;
+    for (let pile of this.piles) {
+      active_count += pile.getActiveCount();
+    }
     this.player_turn = (this.player_turn + 1) % 2;
+    if (active_count === 0) {
+      console.log("Player", this.player_turn, "wins");
+      this.status_container.innerHTML = `Player ${this.player_turn} wins`;
+      return;
+    }
     this.status_container.innerHTML = `Player Turn: ${this.player_turn}`;
   }
 }
@@ -135,6 +145,17 @@ class Pile {
     let count = 0;
     for (let stone of this.stones) {
       if (stone.is_active && stone.is_chosen) {
+        count += 1;
+      }
+    }
+    return count;
+  }
+
+  // getActiveCount returns the number of is_active stones
+  getActiveCount() {
+    let count = 0;
+    for (let stone of this.stones) {
+      if (stone.is_active) {
         count += 1;
       }
     }
