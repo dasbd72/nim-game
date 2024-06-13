@@ -80,8 +80,8 @@ class NimGame {
         console.error("Cannot choose stones from multiple piles");
         return false;
       }
-      return true;
     }
+    return true;
   }
 
   // endTurn ends the current turn
