@@ -404,7 +404,6 @@ class Stone {
   // chooseStone: the function to choose the stone
   #createElement = (id, chooseStone) => {
     let element = document.createElement("div");
-    element = document.createElement("div");
     element.classList.add("stone");
     element.classList.add("stone-enabled");
     element.id = id;
