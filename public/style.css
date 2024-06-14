@@ -24,6 +24,37 @@ body,
   margin-top: 20px;
 }
 
+.switch {
+  cursor: pointer;
+  display: block;
+  border: none;
+  width: 40px;
+  border-radius: 20px;
+  margin: 4px 2px;
+  padding: 12px 20px;
+  text-align: center;
+  text-decoration: none;
+  font-size: 16px;
+  color: white;
+  user-select: none;
+}
+
+.switch.switch-enabled {
+  background-color: #7db479;
+}
+
+.switch.switch-enabled:hover {
+  background-color: #5e8f5f;
+}
+
+.switch.switch-disabled {
+  background-color: #9d9d9d;
+}
+
+.switch.switch-disabled:hover {
+  background-color: #7a7a7a;
+}
+
 .input-container > button {
   cursor: pointer;
   display: inline-block;
@@ -91,10 +122,24 @@ body,
   cursor: pointer;
 }
 
+.stone-special {
+  width: 60px;
+  height: 60px;
+  background-size: contain;
+}
+
 .stone-enabled {
   background-color: #212121;
 }
 
+.stone-enabled.stone-special {
+  background-image: url("./images/wingkaihong.jpg");
+}
+
 .stone-disabled {
   background-color: #cfcfcf;
+}
+
+.stone-disabled.stone-special {
+  background-image: url("./images/saohsuanlin.jpg");
 }

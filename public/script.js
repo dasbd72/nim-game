@@ -5,6 +5,7 @@ class Root {
   // constructor initializes the game
   constructor() {
     this.game = null;
+    this.is_special = false;
     this.title_container = null;
     this.input_container = null;
     this.status_container = null;
@@ -25,19 +26,30 @@ class Root {
     this.title_container = title_container;
 
     // Create input container
+    let special_switch = new Switch(
+      "special-switch",
+      (is_on) => {
+        this.is_special = is_on;
+      },
+      false
+    );
     let btn_start_game = document.createElement("button");
     btn_start_game.innerHTML = "Start Game";
-    btn_start_game.addEventListener("click", () => this.#onClickStartGame(0));
+    btn_start_game.addEventListener("click", () =>
+      this.#onClickStartGame(0, this.is_special)
+    );
     let btn_start_game_ai = document.createElement("button");
     btn_start_game_ai.innerHTML = "Start Game AI";
     btn_start_game_ai.addEventListener("click", () =>
-      this.#onClickStartGame(1)
+      this.#onClickStartGame(1, this.is_special)
     );
     let btn_end_turn = document.createElement("button");
     btn_end_turn.innerHTML = "End Turn";
     btn_end_turn.addEventListener("click", () => this.#onClickEndTurn());
     let input_container = document.createElement("div");
     input_container.classList.add("input-container");
+    input_container.appendChild(special_switch.element);
+    input_container.appendChild(document.createTextNode("\u00A0")); // &nbsp;
     input_container.appendChild(btn_start_game);
     input_container.appendChild(document.createTextNode("\u00A0")); // &nbsp;
     input_container.appendChild(btn_start_game_ai);
@@ -63,7 +75,7 @@ class Root {
   // initializeGame initializes the game
   //
   // mode: the mode of the game. 0 for 2 players, 1 for player versus AI
-  initializeGame = (mode) => {
+  initializeGame = (mode, is_special) => {
     console.log("Initializing game");
     // Remove game container
     if (this.game !== null) {
@@ -71,16 +83,22 @@ class Root {
       delete this.game;
     }
     // Create game container
-    this.game = new NimGame(`game-container`, mode, [3, 4, 5], (status) => {
-      return this.#updateStatus(status);
-    });
+    this.game = new NimGame(
+      `game-container`,
+      mode,
+      is_special,
+      [3, 4, 5],
+      (status) => {
+        return this.#updateStatus(status);
+      }
+    );
     this.element.appendChild(this.game.element);
   };
 
   // #onClickStartGame is called when the start game button is clicked
-  #onClickStartGame = (mode) => {
+  #onClickStartGame = (mode, is_special) => {
     localStorage.setItem("nim_game_mode", mode);
-    this.initializeGame(mode);
+    this.initializeGame(mode, is_special);
   };
 
   // #onClickEndTurn is called when the end turn button is clicked
@@ -112,15 +130,20 @@ class NimGame {
   //
   // n_stones_lst: the list of number of stones in each pile
   // updateStatus: the function to update the status
-  constructor(id, mode, n_stones_lst, updateStatus) {
+  constructor(id, mode, is_special, n_stones_lst, updateStatus) {
     this.mode = mode;
     this.n_stones_lst = n_stones_lst;
     this.element = this.#createElement(id);
     this.piles = [];
     for (let i = 0; i < n_stones_lst.length; i++) {
-      let pile = new Pile(`pile-${i}`, n_stones_lst[i], (stone_idx) => {
-        return this.#chooseStone(i, stone_idx);
-      });
+      let pile = new Pile(
+        `pile-${i}`,
+        is_special,
+        n_stones_lst[i],
+        (stone_idx) => {
+          return this.#chooseStone(i, stone_idx);
+        }
+      );
       this.piles.push(pile);
       this.element.appendChild(pile.element);
     }
@@ -322,12 +345,12 @@ class Pile {
   // id: the id of the pile
   // n_stones: the number of stones in the pile
   // chooseStone: the function to choose a stone
-  constructor(id, n_stones, chooseStone) {
+  constructor(id, is_special, n_stones, chooseStone) {
     console.log("Creating pile", id, "with", n_stones, "stones");
     [this.element, this.innerElement] = this.#createElement(id);
     this.stones = [];
     for (let i = 0; i < n_stones; i++) {
-      let stone = new Stone(`${id}-stone-${i}`, () => {
+      let stone = new Stone(`${id}-stone-${i}`, is_special, () => {
         return chooseStone(i);
       });
       this.stones.push(stone);
@@ -391,9 +414,9 @@ class Stone {
   //
   // id: the id of the stone
   // chooseStone: the function to choose the stone
-  constructor(id, chooseStone) {
+  constructor(id, is_special, chooseStone) {
     console.log("Creating stone", id);
-    this.element = this.#createElement(id, chooseStone);
+    this.element = this.#createElement(id, is_special, chooseStone);
     this.is_active = true;
     this.is_chosen = false;
   }
@@ -402,9 +425,10 @@ class Stone {
   //
   // id: the id of the stone
   // chooseStone: the function to choose the stone
-  #createElement = (id, chooseStone) => {
+  #createElement = (id, is_special, chooseStone) => {
     let element = document.createElement("div");
     element.classList.add("stone");
+    if (is_special) element.classList.add("stone-special");
     element.classList.add("stone-enabled");
     element.id = id;
     element.addEventListener("click", () => this.#onClick(chooseStone));
