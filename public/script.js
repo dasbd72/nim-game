@@ -38,7 +38,7 @@ class Root {
       ],
       this.is_last_win ? 1 : 0,
       "win-mode-switch",
-      [("switch-last-lose", "switch-last-win")]
+      ["switch-last-lose", "switch-last-win"]
     );
     let special_switch = new ChoiceSwitch(
       "special-switch",
@@ -48,7 +48,7 @@ class Root {
       ["⚫️", "👨🏼‍🏫"],
       this.is_special ? 1 : 0,
       "special-switch",
-      [("switch-normal", "switch-special")]
+      ["switch-normal", "switch-special"]
     );
     let btn_start_game = document.createElement("button");
     btn_start_game.innerHTML = "Start Game";
