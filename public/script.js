@@ -7,6 +7,7 @@ class Root {
     this.game = null;
     this.is_last_win = true;
     this.is_special = false;
+    this.difficulty = 0;
     this.title_container = null;
     this.input_container = null;
     this.status_container = null;
@@ -53,6 +54,16 @@ class Root {
     let btn_start_game = document.createElement("button");
     btn_start_game.innerHTML = "Start Game";
     btn_start_game.addEventListener("click", () => this.#onClickStartGame(0));
+    let difficulty_switch = new ChoiceSwitch(
+      "difficulty-switch",
+      (choice_index) => {
+        this.difficulty = choice_index;
+      },
+      ["Easy", "Medium", "Hard"],
+      this.difficulty,
+      "difficulty-switch",
+      ["switch-easy", "switch-medium", "switch-hard"]
+    );
     let btn_start_game_ai = document.createElement("button");
     btn_start_game_ai.innerHTML = "Start Game AI";
     btn_start_game_ai.addEventListener("click", () =>
@@ -68,6 +79,8 @@ class Root {
     input_container.appendChild(special_switch.element);
     input_container.appendChild(document.createTextNode("\u00A0")); // &nbsp;
     input_container.appendChild(btn_start_game);
+    input_container.appendChild(document.createTextNode("\u00A0")); // &nbsp;
+    input_container.appendChild(difficulty_switch.element);
     input_container.appendChild(document.createTextNode("\u00A0")); // &nbsp;
     input_container.appendChild(btn_start_game_ai);
     input_container.appendChild(document.createTextNode("\u00A0")); // &nbsp;
@@ -99,13 +112,22 @@ class Root {
       this.element.removeChild(this.game.element);
       delete this.game;
     }
+    // Set n_stones_lst based on difficulty
+    let n_stones_lst = [];
+    if (this.difficulty === 0) {
+      n_stones_lst = [3, 4, 5];
+    } else if (this.difficulty === 1) {
+      n_stones_lst = [5, 7, 9];
+    } else if (this.difficulty === 2) {
+      n_stones_lst = [3, 5, 7, 9];
+    }
     // Create game container
     this.game = new NimGame(
       `game-container`,
       mode,
       this.is_last_win,
       this.is_special,
-      [3, 4, 5],
+      n_stones_lst,
       (status) => {
         return this.#updateStatus(status);
       }

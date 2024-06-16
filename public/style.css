@@ -68,6 +68,15 @@ body,
   text-align: left;
 }
 
+.switch.difficulty-switch {
+  width: 56px;
+  background-color: #789775;
+}
+
+.switch.difficulty-switch:hover {
+  background-color: #95ac95;
+}
+
 .input-container > button {
   cursor: pointer;
   display: inline-block;
