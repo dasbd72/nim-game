@@ -155,6 +155,10 @@ class Root {
 class NimGame {
   // constructor initializes the game with the number of piles and stones specified
   //
+  // id: the id of the game container
+  // mode: the mode of the game. 0 for 2 players, 1 for player versus AI
+  // is_last_win: whether the last win mode is enabled
+  // is_special: whether the special mode is enabled
   // n_stones_lst: the list of number of stones in each pile
   // updateStatus: the function to update the status
   constructor(id, mode, is_last_win, is_special, n_stones_lst, updateStatus) {
@@ -391,6 +395,7 @@ class Pile {
   // constructor initializes the pile with n_stones
   //
   // id: the id of the pile
+  // is_special: whether the special mode is enabled
   // n_stones: the number of stones in the pile
   // chooseStone: the function to choose a stone
   constructor(id, is_special, n_stones, chooseStone) {
@@ -461,6 +466,7 @@ class Stone {
   // constructor initializes the stone
   //
   // id: the id of the stone
+  // is_special: whether the special mode is enabled
   // chooseStone: the function to choose the stone
   constructor(id, is_special, chooseStone) {
     console.log("Creating stone", id);
@@ -472,6 +478,7 @@ class Stone {
   // #createElement creates a stone with the specified id
   //
   // id: the id of the stone
+  // is_special: whether the special mode is enabled
   // chooseStone: the function to choose the stone
   #createElement = (id, is_special, chooseStone) => {
     let element = document.createElement("div");
