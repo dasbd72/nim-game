@@ -52,13 +52,11 @@ class Root {
     );
     let btn_start_game = document.createElement("button");
     btn_start_game.innerHTML = "Start Game";
-    btn_start_game.addEventListener("click", () =>
-      this.#onClickStartGame(0, this.is_last_win, this.is_special)
-    );
+    btn_start_game.addEventListener("click", () => this.#onClickStartGame(0));
     let btn_start_game_ai = document.createElement("button");
     btn_start_game_ai.innerHTML = "Start Game AI";
     btn_start_game_ai.addEventListener("click", () =>
-      this.#onClickStartGame(1, this.is_last_win, this.is_special)
+      this.#onClickStartGame(1)
     );
     let btn_end_turn = document.createElement("button");
     btn_end_turn.innerHTML = "End Turn";
@@ -88,15 +86,13 @@ class Root {
     if (mode === null) {
       mode = 0;
     }
-    this.initializeGame(mode);
+    this.#initializeGame(mode);
   }
 
-  // initializeGame initializes the game
+  // #initializeGame initializes the game
   //
   // mode: the mode of the game. 0 for 2 players, 1 for player versus AI
-  // is_last_win: whether the last win mode is enabled
-  // is_special: whether the special mode is enabled
-  initializeGame = (mode, is_last_win, is_special) => {
+  #initializeGame = (mode) => {
     console.log("Initializing game");
     // Remove game container
     if (this.game !== null) {
@@ -107,8 +103,8 @@ class Root {
     this.game = new NimGame(
       `game-container`,
       mode,
-      is_last_win,
-      is_special,
+      this.is_last_win,
+      this.is_special,
       [3, 4, 5],
       (status) => {
         return this.#updateStatus(status);
@@ -120,11 +116,9 @@ class Root {
   // #onClickStartGame is called when the start game button is clicked
   //
   // mode: the mode of the game. 0 for 2 players, 1 for player versus AI
-  // is_last_win: whether the last win mode is enabled
-  // is_special: whether the special mode is enabled
-  #onClickStartGame = (mode, is_last_win, is_special) => {
+  #onClickStartGame = (mode) => {
     localStorage.setItem("nim_game_mode", mode);
-    this.initializeGame(mode, is_last_win, is_special);
+    this.#initializeGame(mode);
   };
 
   // #onClickEndTurn is called when the end turn button is clicked
