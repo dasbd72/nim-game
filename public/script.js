@@ -5,6 +5,7 @@ class Root {
   // constructor initializes the game
   constructor() {
     this.game = null;
+    this.is_last_win = true;
     this.is_special = false;
     this.title_container = null;
     this.input_container = null;
@@ -26,28 +27,46 @@ class Root {
     this.title_container = title_container;
 
     // Create input container
-    let special_switch = new Switch(
-      "special-switch",
-      (is_on) => {
-        this.is_special = is_on;
+    let win_mode_switch = new ChoiceSwitch(
+      "win-mode-switch",
+      (choice_index) => {
+        this.is_last_win = choice_index === 1;
       },
-      false
+      [
+        "Last <div class='win-lose'>Lose</div>",
+        "Last <div class='win-lose'>Win</div>",
+      ],
+      this.is_last_win ? 1 : 0,
+      "win-mode-switch",
+      [("switch-last-lose", "switch-last-win")]
+    );
+    let special_switch = new ChoiceSwitch(
+      "special-switch",
+      (choice_index) => {
+        this.is_special = choice_index === 1;
+      },
+      ["⚫️", "👨🏼‍🏫"],
+      this.is_special ? 1 : 0,
+      "special-switch",
+      [("switch-normal", "switch-special")]
     );
     let btn_start_game = document.createElement("button");
     btn_start_game.innerHTML = "Start Game";
     btn_start_game.addEventListener("click", () =>
-      this.#onClickStartGame(0, this.is_special)
+      this.#onClickStartGame(0, this.is_last_win, this.is_special)
     );
     let btn_start_game_ai = document.createElement("button");
     btn_start_game_ai.innerHTML = "Start Game AI";
     btn_start_game_ai.addEventListener("click", () =>
-      this.#onClickStartGame(1, this.is_special)
+      this.#onClickStartGame(1, this.is_last_win, this.is_special)
     );
     let btn_end_turn = document.createElement("button");
     btn_end_turn.innerHTML = "End Turn";
     btn_end_turn.addEventListener("click", () => this.#onClickEndTurn());
     let input_container = document.createElement("div");
     input_container.classList.add("input-container");
+    input_container.appendChild(win_mode_switch.element);
+    input_container.appendChild(document.createTextNode("\u00A0")); // &nbsp;
     input_container.appendChild(special_switch.element);
     input_container.appendChild(document.createTextNode("\u00A0")); // &nbsp;
     input_container.appendChild(btn_start_game);
@@ -75,7 +94,9 @@ class Root {
   // initializeGame initializes the game
   //
   // mode: the mode of the game. 0 for 2 players, 1 for player versus AI
-  initializeGame = (mode, is_special) => {
+  // is_last_win: whether the last win mode is enabled
+  // is_special: whether the special mode is enabled
+  initializeGame = (mode, is_last_win, is_special) => {
     console.log("Initializing game");
     // Remove game container
     if (this.game !== null) {
@@ -86,6 +107,7 @@ class Root {
     this.game = new NimGame(
       `game-container`,
       mode,
+      is_last_win,
       is_special,
       [3, 4, 5],
       (status) => {
@@ -96,9 +118,13 @@ class Root {
   };
 
   // #onClickStartGame is called when the start game button is clicked
-  #onClickStartGame = (mode, is_special) => {
+  //
+  // mode: the mode of the game. 0 for 2 players, 1 for player versus AI
+  // is_last_win: whether the last win mode is enabled
+  // is_special: whether the special mode is enabled
+  #onClickStartGame = (mode, is_last_win, is_special) => {
     localStorage.setItem("nim_game_mode", mode);
-    this.initializeGame(mode, is_special);
+    this.initializeGame(mode, is_last_win, is_special);
   };
 
   // #onClickEndTurn is called when the end turn button is clicked
@@ -130,8 +156,9 @@ class NimGame {
   //
   // n_stones_lst: the list of number of stones in each pile
   // updateStatus: the function to update the status
-  constructor(id, mode, is_special, n_stones_lst, updateStatus) {
+  constructor(id, mode, is_last_win, is_special, n_stones_lst, updateStatus) {
     this.mode = mode;
+    this.is_last_win = is_last_win;
     this.n_stones_lst = n_stones_lst;
     this.element = this.#createElement(id);
     this.piles = [];
@@ -206,8 +233,10 @@ class NimGame {
     }
 
     // Get optimal move, otherwise get random move
-    let [choose_pile_idx, choose_stones_cnt] =
-      this.#getOptimalMove(active_count_lst);
+    let [choose_pile_idx, choose_stones_cnt] = this.#getOptimalMove(
+      this.is_last_win,
+      active_count_lst
+    );
     if (choose_pile_idx === -1 || choose_stones_cnt === 0) {
       [choose_pile_idx, choose_stones_cnt] =
         this.#getRandomMove(active_count_lst);
@@ -235,31 +264,34 @@ class NimGame {
 
   // #getOptimalMove returns the optimal move given the active count list
   //
+  // is_last_win: whether the last win mode is enabled
   // active_count_lst: the list of active counts for each pile
-  #getOptimalMove = (active_count_lst) => {
-    // try to leave odd number of piles with 1 stone
-    let active_eq_1_lst = []; // list of piles with 1 stone
-    let active_gt_1_lst = []; // list of piles with more than 1 stone
-    for (let i = 0; i < active_count_lst.length; i++) {
-      if (active_count_lst[i] === 1) {
-        active_eq_1_lst.push(i);
+  #getOptimalMove = (is_last_win, active_count_lst) => {
+    if (!is_last_win) {
+      // try to leave odd number of piles with 1 stone
+      let active_eq_1_lst = []; // list of piles with 1 stone
+      let active_gt_1_lst = []; // list of piles with more than 1 stone
+      for (let i = 0; i < active_count_lst.length; i++) {
+        if (active_count_lst[i] === 1) {
+          active_eq_1_lst.push(i);
+        }
+        if (active_count_lst[i] > 1) {
+          active_gt_1_lst.push(i);
+        }
       }
-      if (active_count_lst[i] > 1) {
-        active_gt_1_lst.push(i);
+      if (active_gt_1_lst.length == 1 && active_eq_1_lst.length % 2 === 0) {
+        return [active_gt_1_lst[0], active_count_lst[active_gt_1_lst[0]] - 1];
       }
-    }
-    if (active_gt_1_lst.length == 1 && active_eq_1_lst.length % 2 === 0) {
-      return [active_gt_1_lst[0], active_count_lst[active_gt_1_lst[0]] - 1];
-    }
-    if (active_gt_1_lst.length == 1 && active_eq_1_lst.length % 2 === 1) {
-      return [active_gt_1_lst[0], active_count_lst[active_gt_1_lst[0]]];
-    }
-    if (active_gt_1_lst.length == 0 && active_eq_1_lst.length % 2 === 0) {
-      return [active_eq_1_lst[0], 1];
-    }
-    if (active_gt_1_lst.length == 0 && active_eq_1_lst.length % 2 === 1) {
-      // losing position
-      return [-1, 0];
+      if (active_gt_1_lst.length == 1 && active_eq_1_lst.length % 2 === 1) {
+        return [active_gt_1_lst[0], active_count_lst[active_gt_1_lst[0]]];
+      }
+      if (active_gt_1_lst.length == 0 && active_eq_1_lst.length % 2 === 0) {
+        return [active_eq_1_lst[0], 1];
+      }
+      if (active_gt_1_lst.length == 0 && active_eq_1_lst.length % 2 === 1) {
+        // losing position
+        return [-1, 0];
+      }
     }
 
     // get nim sum
@@ -324,12 +356,18 @@ class NimGame {
     for (let pile of this.piles) {
       active_count += pile.getActiveCount();
     }
-    this.player_turn = (this.player_turn + 1) % 2;
     if (active_count === 0) {
-      console.log(this.player_name_lst[this.player_turn], "wins");
-      this.updateStatus(`${this.player_name_lst[this.player_turn]} wins`);
+      let status;
+      if (this.is_last_win) {
+        status = `${this.player_name_lst[this.player_turn]} wins`;
+      } else {
+        status = `${this.player_name_lst[(this.player_turn + 1) % 2]} wins`;
+      }
+      this.updateStatus(status);
+      console.log(`Game Over: ${status}`);
       return;
     }
+    this.player_turn = (this.player_turn + 1) % 2;
     this.updateStatus(`Player Turn: ${this.player_name_lst[this.player_turn]}`);
 
     if (this.mode === 1 && this.player_turn === 1) {

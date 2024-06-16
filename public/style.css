@@ -37,22 +37,35 @@ body,
   font-size: 16px;
   color: white;
   user-select: none;
-}
-
-.switch.switch-enabled {
-  background-color: #7db479;
-}
-
-.switch.switch-enabled:hover {
-  background-color: #5e8f5f;
-}
-
-.switch.switch-disabled {
   background-color: #9d9d9d;
 }
 
-.switch.switch-disabled:hover {
+.switch:hover {
   background-color: #7a7a7a;
+}
+
+.switch.special-switch {
+  width: fit-content;
+  background-color: #789775;
+}
+
+.switch.special-switch:hover {
+  background-color: #95ac95;
+}
+
+.switch.win-mode-switch {
+  width: fit-content;
+  background-color: #789775;
+}
+
+.switch.win-mode-switch:hover {
+  background-color: #95ac95;
+}
+
+.switch.win-mode-switch .win-lose {
+  display: inline-block;
+  width: 35px;
+  text-align: left;
 }
 
 .input-container > button {
