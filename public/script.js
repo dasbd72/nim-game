@@ -69,9 +69,6 @@ class Root {
     btn_start_game_ai.addEventListener("click", () =>
       this.#onClickStartGame(1)
     );
-    let btn_end_turn = document.createElement("button");
-    btn_end_turn.innerHTML = "End Turn";
-    btn_end_turn.addEventListener("click", () => this.#onClickEndTurn());
     let input_container = document.createElement("div");
     input_container.classList.add("input-container");
     input_container.appendChild(win_mode_switch.element);
@@ -83,8 +80,6 @@ class Root {
     input_container.appendChild(difficulty_switch.element);
     input_container.appendChild(document.createTextNode("\u00A0")); // &nbsp;
     input_container.appendChild(btn_start_game_ai);
-    input_container.appendChild(document.createTextNode("\u00A0")); // &nbsp;
-    input_container.appendChild(btn_end_turn);
     this.element.appendChild(input_container);
     this.input_container = input_container;
 
@@ -143,16 +138,6 @@ class Root {
     this.#initializeGame(mode);
   };
 
-  // #onClickEndTurn is called when the end turn button is clicked
-  #onClickEndTurn = () => {
-    console.log("Ending turn");
-    if (this.game === null) {
-      console.error("Game is not started");
-      return;
-    }
-    this.game.endTurn();
-  };
-
   // #updateStatus updates the status container
   //
   // status: the status to update
@@ -190,6 +175,10 @@ class NimGame {
       this.piles.push(pile);
       this.element.appendChild(pile.element);
     }
+    let btn_end_turn = document.createElement("button");
+    btn_end_turn.innerHTML = "End Turn";
+    btn_end_turn.addEventListener("click", () => this.#onClickEndTurn());
+    this.element.appendChild(btn_end_turn);
 
     this.updateStatus = updateStatus;
     this.player_turn = 0;
@@ -275,7 +264,7 @@ class NimGame {
     }
 
     // End turn
-    this.endTurn();
+    this.#endTurn();
   };
 
   // #getOptimalMove returns the optimal move given the active count list
@@ -354,8 +343,13 @@ class NimGame {
     return [choose_pile_idx, choose_stones_cnt];
   };
 
-  // endTurn ends the current turn
-  endTurn = () => {
+  // #onClickEndTurn is called when the end turn button is clicked
+  #onClickEndTurn = () => {
+    this.#endTurn();
+  };
+
+  // #endTurn ends the current turn
+  #endTurn = () => {
     let chosen_count = 0;
     for (let pile of this.piles) {
       chosen_count += pile.getChosenCount();

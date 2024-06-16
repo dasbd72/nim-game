@@ -110,6 +110,26 @@ body,
   margin-top: 20px;
 }
 
+.game-container > button {
+  cursor: pointer;
+  display: inline-block;
+  border: none;
+  border-radius: 15px;
+  margin: 20px 4px 2px 2px;
+  padding: 12px 20px;
+  text-align: center;
+  text-decoration: none;
+  font-size: 16px;
+  color: rgb(0, 0, 0);
+  background-color: #ffffff;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.17);
+}
+
+.game-container > button:hover {
+  background-color: #e3e2e2;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+}
+
 .pile {
   width: 100%;
   display: flex;
